@@ -30,6 +30,10 @@ int main() {
   /* mvprintw(0, 0, "Height: %d, Width: %d", screenHeight, screenWidth); */
   /* mvprintw(0, 0, "Maximum Colors: %d", COLORS); */
 
+  mvprintw(LINES - 3, 0, "Use WASD to move windows");
+  mvprintw(LINES - 2, 0, "Use Arrow Keys to resize windows");
+  mvprintw(LINES - 1, 0, "Use HJKL to change focus");
+
   // Main section
   int y = 5, x = 5, height = screenHeight / 4, width = screenWidth / 4;
 
