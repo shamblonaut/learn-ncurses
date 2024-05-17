@@ -138,8 +138,9 @@ void Window::drawTitle() {
 }
 
 Window::~Window() {
-  /*winBorder.setMode(Border::NONE);*/
-  wclear(win);
-  wrefresh(win);
+  if (!isendwin()) {
+    wclear(win);
+    wrefresh(win);
+  }
   delwin(win);
 }

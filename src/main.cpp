@@ -157,8 +157,6 @@ int main() {
     ch = getch();
   }
 
-  doupdate();
-
   // Close curses mode
   endwin();
 
