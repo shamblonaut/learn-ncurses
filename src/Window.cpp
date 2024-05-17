@@ -2,18 +2,25 @@
 
 #include <ncurses.h>
 
+#include "Border.hpp"
+#include "Color.hpp"
 #include "Text.hpp"
 
-Window::Window(Position position, Size size, BorderMode borderMode)
-    : position(position), size(size), borderMode(borderMode) {
+Window::Window(
+    Position position, Size size, Title title,
+    Border::BorderMode borderMode = Border::FLAT, Color borderColor = NEUTRAL
+)
+    : position(position),
+      size(size),
+      title(title),
+      winBorder(Border(borderMode, borderColor)) {
   win = newwin(size.height, size.width, position.y, position.x);
   render();
-  init_pair(1, COLOR_GREEN, -1);
 }
 
 void Window::render() {
-  setBorder(borderMode);
-  setTitle(title, LEFT);
+  drawBorder();
+  drawTitle();
 
   for (const Text& text : textContent) {
     printAligned(text.content, text.alignment);
@@ -39,12 +46,13 @@ void Window::resize(Size newSize) {
 }
 
 void Window::addText(const std::string& content, Alignment alignment) {
-  textContent.push_back((Text){ content, alignment });
+  textContent.push_back((Text){content, alignment});
   render();
 }
 
-void Window::printAligned(const std::string& message, Alignment alignment,
-                          Position offset) {
+void Window::printAligned(
+    const std::string& message, Alignment alignment, Position offset
+) {
   int row = offset.x, column = offset.y;
   switch (alignment) {
     case TOP_LEFT:
@@ -86,108 +94,51 @@ void Window::printAligned(const std::string& message, Alignment alignment,
   }
 
   mvwprintw(win, row + offset.y, column + offset.x, "%s", message.c_str());
-  wrefresh(win);
 }
 
-void Window::setTitle(const std::string& newTitle, RowAlignment alignment) {
-  title = newTitle;
-  if (title == "") {
-    setBorder(borderMode);
+void Window::setBorder(Border::BorderMode borderMode, Color color) {
+  winBorder.setColor(color);
+  winBorder.setMode(borderMode);
+}
+void Window::setTitle(Title newTitle) { title = newTitle; }
+
+void Window::drawBorder() {
+  wborder_set(
+      win, &winBorder.characters.left, &winBorder.characters.right,
+      &winBorder.characters.top, &winBorder.characters.bottom,
+      &winBorder.characters.topLeft, &winBorder.characters.topRight,
+      &winBorder.characters.bottomLeft, &winBorder.characters.bottomRight
+  );
+}
+
+void Window::drawTitle() {
+  if (title.title == "") {
+    drawBorder();
     return;
   }
 
   Alignment printAlignment;
   Position printOffset;
-  switch (alignment) {
+  switch (title.alignment) {
     case LEFT:
       printAlignment = TOP_LEFT;
-      printOffset = (Position){ -1, 1 };
+      printOffset = (Position){-1, 1};
       break;
     case CENTER:
       printAlignment = TOP_CENTER;
-      printOffset = (Position){ -1, 0 };
+      printOffset = (Position){-1, 0};
       break;
     case RIGHT:
       printAlignment = TOP_RIGHT;
-      printOffset = (Position){ -1, -1 };
+      printOffset = (Position){-1, -1};
       break;
   }
 
-  printAligned(title, printAlignment, printOffset);
-}
-
-void Window::setBorder(BorderMode mode) {
-  if (focused) {
-    wattron(win, COLOR_PAIR(1));
-  } else {
-    wattron(win, COLOR_PAIR(0));
-  }
-
-  cchar_t lb, rb, tb, bb, tl, tr, bl, br;
-  switch (mode) {
-    case NONE:
-      wborder(win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
-      break;
-    case SIMPLE:
-      wborder(win, '|', '|', '-', '-', '+', '+', '+', '+');
-      break;
-    case BLOCK:
-      setcchar(&lb, L"█", 0, focused ? 1 : 0, nullptr);
-      setcchar(&rb, L"█", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tb, L"▄", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bb, L"▀", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tl, L"▄", 0, focused ? 1 : 0, nullptr);
-      setcchar(&br, L"▀", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tr, L"▄", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bl, L"▀", 0, focused ? 1 : 0, nullptr);
-      break;
-    case FLAT:
-      setcchar(&lb, L"│", 0, focused ? 1 : 0, nullptr);
-      setcchar(&rb, L"│", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tb, L"─", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bb, L"─", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tl, L"┌", 0, focused ? 1 : 0, nullptr);
-      setcchar(&br, L"┘", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tr, L"┐", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bl, L"└", 0, focused ? 1 : 0, nullptr);
-      break;
-    case DOUBLE:
-      setcchar(&lb, L"║", 0, focused ? 1 : 0, nullptr);
-      setcchar(&rb, L"║", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tb, L"═", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bb, L"═", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tl, L"╔", 0, focused ? 1 : 0, nullptr);
-      setcchar(&br, L"╝", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tr, L"╗", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bl, L"╚", 0, focused ? 1 : 0, nullptr);
-      break;
-    case ROUNDED:
-      setcchar(&lb, L"│", 0, focused ? 1 : 0, nullptr);
-      setcchar(&rb, L"│", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tb, L"─", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bb, L"─", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tl, L"╭", 0, focused ? 1 : 0, nullptr);
-      setcchar(&br, L"╯", 0, focused ? 1 : 0, nullptr);
-      setcchar(&tr, L"╮", 0, focused ? 1 : 0, nullptr);
-      setcchar(&bl, L"╰", 0, focused ? 1 : 0, nullptr);
-      break;
-  }
-
-  if (mode != NONE && mode != SIMPLE) {
-    wborder_set(win, &lb, &rb, &tb, &bb, &tl, &tr, &bl, &br);
-  }
-
-  if (focused ? 1 : 0) {
-    wattroff(win, COLOR_PAIR(1));
-  } else {
-    wattroff(win, COLOR_PAIR(0));
-  }
-
-  wrefresh(win);
+  printAligned(title.title, printAlignment, printOffset);
 }
 
 Window::~Window() {
-  setBorder(NONE);
+  /*winBorder.setMode(Border::NONE);*/
   wclear(win);
   wrefresh(win);
   delwin(win);

@@ -22,3 +22,8 @@ struct Text {
   std::string content;
   Alignment alignment;
 };
+
+struct Title {
+  std::string title;
+  RowAlignment alignment;
+};

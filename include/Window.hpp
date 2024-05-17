@@ -5,7 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "../include/Text.hpp"
+#include "Border.hpp"
+#include "Color.hpp"
+#include "Text.hpp"
 
 struct Position {
   int y;
@@ -17,15 +19,6 @@ struct Size {
   int width;
 };
 
-enum BorderMode {
-  NONE,
-  SIMPLE,
-  BLOCK,
-  FLAT,
-  DOUBLE,
-  ROUNDED,
-};
-
 class Window {
  public:
   WINDOW* win;
@@ -33,26 +26,34 @@ class Window {
   Position position;
   Size size;
 
-  std::string title;
+  Title title;
   std::vector<Text> textContent;
 
-  BorderMode borderMode;
+  Border winBorder;
   wchar_t borderGlyphs[8];
 
   bool focused = false;
 
-  Window(Position position, Size size, BorderMode borderMode);
+  Window(
+      Position position, Size size, Title title, Border::BorderMode borderMode,
+      Color borderColor
+  );
 
   void render();
-  void setBorder(BorderMode mode);
-  void printAligned(const std::string& message, Alignment alignment,
-                    Position offset = (Position){ 0, 0 });
+  void drawBorder();
+  void drawTitle();
+
+  void printAligned(
+      const std::string& message, Alignment alignment,
+      Position offset = (Position){0, 0}
+  );
 
   void move(Position newPosition);
   void resize(Size newSize);
 
   void addText(const std::string& content, Alignment alignment);
-  void setTitle(const std::string& title, RowAlignment alignment);
+  void setBorder(Border::BorderMode borderMode, Color color);
+  void setTitle(Title newTitle);
 
   ~Window();
 };

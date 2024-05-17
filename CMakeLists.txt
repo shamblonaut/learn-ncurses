@@ -16,6 +16,8 @@ include_directories(tui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(SOURCES
     src/main.cpp
     src/Window.cpp
+    src/Border.cpp
+    src/Color.cpp
 )
 
 # Executable
