@@ -23,6 +23,7 @@ struct ActiveWindow {
 } activeWindow;
 
 void changeActiveWindow(Window* next);
+void resetWindowStates(Window windows[2][3]);
 
 int main() {
   // Initialize curses mode
@@ -176,10 +177,19 @@ int main() {
       case 'l':
         if (winJ < 2) winJ++;
         break;
+      case 'r':
+        resetWindowStates(windows);
+        ch = 0;
+        continue;
+        break;
     }
 
     if (ch == 'h' || ch == 'j' || ch == 'k' || ch == 'l') {
       changeActiveWindow(&windows[winI][winJ]);
+    }
+
+    if (ch == KEY_RESIZE) {
+      resetWindowStates(windows);
     }
 
     infoBox.render();
@@ -272,4 +282,41 @@ void changeActiveWindow(Window* next) {
   activeWindow.marker =
       activeWindow.window->addText(L"◆", TOP_LEFT, BLUE, (Offset){0, -1});
   activeWindow.window->render();
+}
+
+void resetWindowStates(Window windows[2][3]) {
+  int screenHeight, screenWidth;
+  getmaxyx(stdscr, screenHeight, screenWidth);
+
+  int y = 5, x = 5, height = screenHeight / 4, width = screenWidth / 4;
+
+  windows[0][0].move((Position){y, x});
+  windows[0][0].resize((Size){height, width});
+
+  windows[0][1].move((Position){y, (int)floor((float)screenWidth / 3 + x)});
+  windows[0][1].resize((Size){height, width});
+
+  windows[0][2].move((Position){y, (int)floor((float)screenWidth / 3 * 2 + x)});
+  windows[0][2].resize((Size){height, width});
+
+  windows[1][0].move((Position
+  ){(int)floor((float)screenHeight / 2 + y), (int)floor((float)x)});
+  windows[1][0].resize((Size){height, width});
+
+  windows[1][1].move((Position
+  ){(int)floor((float)screenHeight / 2 + y),
+    (int)floor((float)screenWidth / 3 + x)});
+  windows[1][1].resize((Size){height, width});
+
+  windows[1][2].move((Position
+  ){(int)floor((float)screenHeight / 2 + y),
+    (int)floor((float)screenWidth / 3 * 2 + x)});
+  windows[1][2].resize((Size){height, width});
+
+  windows[0][0].render();
+  windows[0][1].render();
+  windows[0][2].render();
+  windows[1][0].render();
+  windows[1][1].render();
+  windows[1][2].render();
 }

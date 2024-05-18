@@ -53,13 +53,13 @@ void Window::move(Position newPosition) {
 void Window::resize(Size newSize) {
   int screenHeight, screenWidth;
   getmaxyx(stdscr, screenHeight, screenWidth);
-  if (newSize.height < 0) {
-    newSize.height = 0;
+  if (newSize.height < 2) {
+    newSize.height = 2;
   } else if (position.y + newSize.height > screenHeight) {
     newSize.height = screenHeight - position.y;
   }
-  if (newSize.width < 0) {
-    newSize.width = 0;
+  if (newSize.width < 2) {
+    newSize.width = 2;
   } else if (position.x + newSize.width > screenWidth) {
     newSize.width = screenWidth - position.x;
   }
