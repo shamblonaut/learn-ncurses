@@ -101,7 +101,7 @@ int main() {
   windows[1][2].addText(L"Rounded borders", MIDDLE_CENTER);
 
   Window infoBox = Window(
-      (Position){screenHeight - 7, 0}, (Size){7, screenWidth / 4 + 10},
+      (Position){screenHeight - 8, 0}, (Size){8, screenWidth / 4 + 10},
       Title(L"Instructions", LEFT, BLUE, 0), Border::ROUNDED, CYAN
   );
   infoBox.addText(
@@ -122,6 +122,10 @@ int main() {
   infoBox.addText(
       L"• Click and drag the right/bottom border to resize window", TOP_LEFT,
       GREEN, (Offset){4, 0}
+  );
+  infoBox.addText(
+      L"• Press r to reset windows to initial state", TOP_LEFT, GREEN,
+      (Offset){5, 0}
   );
 
   int winI = 0, winJ = 1;
