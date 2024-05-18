@@ -63,63 +63,63 @@ int main() {
 
   Window windows[][3] = {
       {Window(
-           (Position){y, x}, (Size){height, width}, (Title){""}, Border::NONE,
+           (Position){y, x}, (Size){height, width}, (Title){L""}, Border::NONE,
            NEUTRAL
        ),
        Window(
            (Position){y, (int)floor((float)screenWidth / 3 + x)},
-           (Size){height, width}, (Title){""}, Border::SIMPLE, NEUTRAL
+           (Size){height, width}, (Title){L""}, Border::SIMPLE, NEUTRAL
        ),
        Window(
            (Position){y, (int)floor((float)screenWidth / 3 * 2 + x)},
-           (Size){height, width}, (Title){""}, Border::BLOCK, NEUTRAL
+           (Size){height, width}, (Title){L""}, Border::BLOCK, NEUTRAL
        )},
       {Window(
            (Position){(int)floor((float)screenHeight / 2 + y), x},
-           (Size){height, width}, (Title){""}, Border::FLAT, NEUTRAL
+           (Size){height, width}, (Title){L""}, Border::FLAT, NEUTRAL
        ),
        Window(
            (Position
            ){(int)floor((float)screenHeight / 2 + y),
              (int)floor((float)screenWidth / 3 + x)},
-           (Size){height, width}, (Title){""}, Border::DOUBLE, NEUTRAL
+           (Size){height, width}, (Title){L""}, Border::DOUBLE, NEUTRAL
        ),
        Window(
            (Position
            ){(int)floor((float)screenHeight / 2 + y),
              (int)floor((float)screenWidth / 3 * 2 + x)},
-           (Size){height, width}, (Title){""}, Border::ROUNDED, NEUTRAL
+           (Size){height, width}, (Title){L""}, Border::ROUNDED, NEUTRAL
        )}
   };
 
-  windows[0][0].addText("No borders", MIDDLE_CENTER);
-  windows[0][1].addText("Simple borders", MIDDLE_CENTER);
-  windows[0][2].addText("Block borders", MIDDLE_CENTER);
-  windows[1][0].addText("Flat borders", MIDDLE_CENTER);
-  windows[1][1].addText("Double borders", MIDDLE_CENTER);
-  windows[1][2].addText("Rounded borders", MIDDLE_CENTER);
+  windows[0][0].addText(L"No borders", MIDDLE_CENTER);
+  windows[0][1].addText(L"Simple borders", MIDDLE_CENTER);
+  windows[0][2].addText(L"Block borders", MIDDLE_CENTER);
+  windows[1][0].addText(L"Flat borders", MIDDLE_CENTER);
+  windows[1][1].addText(L"Double borders", MIDDLE_CENTER);
+  windows[1][2].addText(L"Rounded borders", MIDDLE_CENTER);
 
   Window infoBox = Window(
       (Position){screenHeight - 7, 0}, (Size){7, screenWidth / 4 + 10},
-      Title("Instructions", LEFT, BLUE, 0), Border::ROUNDED, CYAN
+      Title(L"Instructions", LEFT, BLUE, 0), Border::ROUNDED, CYAN
   );
   infoBox.addText(
-      "- Use WASD to move windows", TOP_LEFT, GREEN, (Offset){0, 0}
+      L"• Use WASD to move windows", TOP_LEFT, GREEN, (Offset){0, 0}
   );
   infoBox.addText(
-      "- Use Arrow Keys to resize windows", TOP_LEFT, GREEN, (Offset){1, 0}
+      L"• Use Arrow Keys to resize windows", TOP_LEFT, GREEN, (Offset){1, 0}
   );
   infoBox.addText(
-      "- Use HJKL to change focus", TOP_LEFT, GREEN, (Offset){2, 0}
+      L"• Use HJKL to change focus", TOP_LEFT, GREEN, (Offset){2, 0}
   );
   infoBox.addText(
-      "- Click on a window to focus", TOP_LEFT, GREEN, (Offset){3, 0}
+      L"• Click on a window to focus", TOP_LEFT, GREEN, (Offset){3, 0}
   );
   infoBox.addText(
-      "- Click and drag on window to move it", TOP_LEFT, GREEN, (Offset){4, 0}
+      L"• Click and drag on window to move it", TOP_LEFT, GREEN, (Offset){4, 0}
   );
   infoBox.addText(
-      "- Click and drag the right/bottom border to resize window", TOP_LEFT,
+      L"• Click and drag the right/bottom border to resize window", TOP_LEFT,
       GREEN, (Offset){4, 0}
   );
 
@@ -270,6 +270,6 @@ void changeActiveWindow(Window* next) {
 
   activeWindow.window->winBorder.setColor(GREEN, false);
   activeWindow.marker =
-      activeWindow.window->addText("*", TOP_LEFT, BLUE, (Offset){0, -1});
+      activeWindow.window->addText(L"◆", TOP_LEFT, BLUE, (Offset){0, -1});
   activeWindow.window->render();
 }

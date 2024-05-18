@@ -33,7 +33,7 @@ class Window {
   Border winBorder;
 
   Window(
-      Position position, Size size, Title title = Title(""),
+      Position position, Size size, Title title = Title(L""),
       Border::BorderMode borderMode = Border::FLAT, Color borderColor = NEUTRAL
   );
 
@@ -47,7 +47,7 @@ class Window {
   void resize(Size newSize);
 
   std::shared_ptr<Text> addText(
-      const std::string& content, Alignment alignment = TOP_LEFT,
+      const std::wstring& content, Alignment alignment = TOP_LEFT,
       Color color = NEUTRAL, Offset offset = Offset(0, 0)
   );
   void removeText(std::shared_ptr<Text> text);

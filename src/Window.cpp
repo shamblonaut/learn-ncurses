@@ -72,7 +72,7 @@ void Window::resize(Size newSize) {
 }
 
 std::shared_ptr<Text> Window::addText(
-    const std::string& content, Alignment alignment, Color color, Offset offset
+    const std::wstring& content, Alignment alignment, Color color, Offset offset
 ) {
   std::shared_ptr<Text> text =
       std::make_shared<Text>(content, alignment, color, offset);
@@ -131,9 +131,8 @@ void Window::printText(Text text) {
   }
 
   wattron(win, COLOR_PAIR(text.color));
-  mvwprintw(
-      win, row + text.offset.y, column + text.offset.x, "%s",
-      text.content.c_str()
+  mvwaddwstr(
+      win, row + text.offset.y, column + text.offset.x, text.content.c_str()
   );
   wattroff(win, COLOR_PAIR(text.color));
 }
@@ -154,7 +153,7 @@ void Window::drawBorder() {
 }
 
 void Window::drawTitle() {
-  if (title.title == "") {
+  if (title.title == L"") {
     drawBorder();
     return;
   }

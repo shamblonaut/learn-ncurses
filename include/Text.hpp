@@ -29,34 +29,34 @@ struct Offset {
 };
 
 struct Text {
-  Text(const std::string& content)
+  Text(const std::wstring& content)
       : content(content),
         alignment(TOP_LEFT),
         color(NEUTRAL),
         offset(Offset(0, 0)) {}
 
   Text(
-      const std::string& content, Alignment alignment, Color color,
+      const std::wstring& content, Alignment alignment, Color color,
       Offset offset
   )
       : content(content), alignment(alignment), color(color), offset(offset) {}
 
-  std::string content;
+  std::wstring content;
   Alignment alignment;
   Color color;
   Offset offset;
 };
 
 struct Title {
-  Title(const std::string& title)
+  Title(const std::wstring& title)
       : title(title), alignment(LEFT), color(NEUTRAL), offset(0) {}
 
   Title(
-      const std::string& title, RowAlignment alignment, Color color, int offset
+      const std::wstring& title, RowAlignment alignment, Color color, int offset
   )
       : title(title), alignment(alignment), color(color), offset(offset) {}
 
-  std::string title;
+  std::wstring title;
   RowAlignment alignment{LEFT};
   Color color{NEUTRAL};
   int offset{0};
