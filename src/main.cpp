@@ -9,9 +9,18 @@
 #include "Text.hpp"
 #include "Window.hpp"
 
+struct ActiveWindow {
+  Window* window{nullptr};
+  std::shared_ptr<Text> marker;
+} activeWindow;
+
+void changeActiveWindow(Window* next);
+
 int main() {
   // Initialize curses mode
   initscr();
+
+  // Color stuff
   if (!has_colors()) {
     endwin();
     std::cerr << "Your terminal does not support color\n";
@@ -19,11 +28,15 @@ int main() {
   use_default_colors();
   start_color();
 
+  // Visual stuff
   setlocale(LC_ALL, "");
   cbreak();
   noecho();
-  keypad(stdscr, TRUE);
   curs_set(FALSE);
+
+  // Input stuff
+  keypad(stdscr, TRUE);
+
   refresh();
 
   // Get screen size
@@ -41,32 +54,32 @@ int main() {
 
   Window windows[][3] = {
       {Window(
-           (Position){y, x}, (Size){height, width}, (Title){"", LEFT},
-           Border::NONE, NEUTRAL
+           (Position){y, x}, (Size){height, width}, (Title){""}, Border::NONE,
+           NEUTRAL
        ),
        Window(
            (Position){y, (int)floor((float)screenWidth / 3 + x)},
-           (Size){height, width}, (Title){"", LEFT}, Border::SIMPLE, NEUTRAL
+           (Size){height, width}, (Title){""}, Border::SIMPLE, NEUTRAL
        ),
        Window(
            (Position){y, (int)floor((float)screenWidth / 3 * 2 + x)},
-           (Size){height, width}, (Title){"", LEFT}, Border::BLOCK, NEUTRAL
+           (Size){height, width}, (Title){""}, Border::BLOCK, NEUTRAL
        )},
       {Window(
            (Position){(int)floor((float)screenHeight / 2 + y), x},
-           (Size){height, width}, (Title){"", LEFT}, Border::FLAT, NEUTRAL
+           (Size){height, width}, (Title){""}, Border::FLAT, NEUTRAL
        ),
        Window(
            (Position
            ){(int)floor((float)screenHeight / 2 + y),
              (int)floor((float)screenWidth / 3 + x)},
-           (Size){height, width}, (Title){"", LEFT}, Border::DOUBLE, NEUTRAL
+           (Size){height, width}, (Title){""}, Border::DOUBLE, NEUTRAL
        ),
        Window(
            (Position
            ){(int)floor((float)screenHeight / 2 + y),
              (int)floor((float)screenWidth / 3 * 2 + x)},
-           (Size){height, width}, (Title){"", LEFT}, Border::ROUNDED, NEUTRAL
+           (Size){height, width}, (Title){""}, Border::ROUNDED, NEUTRAL
        )}
   };
 
@@ -78,49 +91,45 @@ int main() {
   windows[1][2].addText("Rounded borders", MIDDLE_CENTER);
 
   int winI = 0, winJ = 1;
-  Window* activeWindow = &windows[winI][winJ];
-  activeWindow->focused = true;
-  activeWindow->setBorder(activeWindow->winBorder.mode, GREEN);
-  activeWindow->setTitle((Title){"Active Window", LEFT});
-  activeWindow->render();
+  changeActiveWindow(&windows[winI][winJ]);
 
   int ch = getch();
   while (ch != 'q') {
-    int winY = activeWindow->position.y;
-    int winX = activeWindow->position.x;
-    int winH = activeWindow->size.height;
-    int winW = activeWindow->size.width;
+    int winY = activeWindow.window->position.y;
+    int winX = activeWindow.window->position.x;
+    int winH = activeWindow.window->size.height;
+    int winW = activeWindow.window->size.width;
 
     switch (ch) {
       case 'w':
         if (winY > 0) {
-          activeWindow->move((Position){--winY, winX});
+          activeWindow.window->move((Position){--winY, winX});
         }
         break;
       case 'a':
-        if (winX > 0) activeWindow->move((Position){winY, --winX});
+        if (winX > 0) activeWindow.window->move((Position){winY, --winX});
         break;
       case 's':
         if (winY < screenHeight - 1) {
-          activeWindow->move((Position){++winY, winX});
+          activeWindow.window->move((Position){++winY, winX});
         }
         break;
       case 'd':
         if (winX < screenWidth - 1) {
-          activeWindow->move((Position){winY, ++winX});
+          activeWindow.window->move((Position){winY, ++winX});
         }
         break;
       case KEY_UP:
-        activeWindow->resize((Size){--winH, winW});
+        activeWindow.window->resize((Size){--winH, winW});
         break;
       case KEY_LEFT:
-        activeWindow->resize((Size){winH, --winW});
+        activeWindow.window->resize((Size){winH, --winW});
         break;
       case KEY_DOWN:
-        activeWindow->resize((Size){++winH, winW});
+        activeWindow.window->resize((Size){++winH, winW});
         break;
       case KEY_RIGHT:
-        activeWindow->resize((Size){winH, ++winW});
+        activeWindow.window->resize((Size){winH, ++winW});
         break;
       case 'h':
         if (winJ > 0) winJ--;
@@ -137,15 +146,7 @@ int main() {
     }
 
     if (ch == 'h' || ch == 'j' || ch == 'k' || ch == 'l') {
-      activeWindow->setTitle((Title){"", LEFT});
-      activeWindow->setBorder(activeWindow->winBorder.mode, NEUTRAL);
-      activeWindow->render();
-      activeWindow->focused = false;
-      activeWindow = &windows[winI][winJ];
-      activeWindow->setTitle((Title){"Active Window", LEFT});
-      activeWindow->setBorder(activeWindow->winBorder.mode, GREEN);
-      activeWindow->render();
-      activeWindow->focused = true;
+      changeActiveWindow(&windows[winI][winJ]);
     }
 
     for (int i = 0; i < 2; i++) {
@@ -161,4 +162,19 @@ int main() {
   endwin();
 
   return 0;
+}
+
+void changeActiveWindow(Window* next) {
+  if (activeWindow.window != nullptr) {
+    activeWindow.window->winBorder.restore();
+    activeWindow.window->removeText(activeWindow.marker);
+    activeWindow.window->render();
+  }
+
+  activeWindow.window = next;
+
+  activeWindow.window->winBorder.setColor(GREEN, false);
+  activeWindow.marker =
+      activeWindow.window->addText("*", TOP_LEFT, BLUE, (Offset){0, -1});
+  activeWindow.window->render();
 }

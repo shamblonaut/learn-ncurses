@@ -1,14 +1,14 @@
 #include "Window.hpp"
 
-#include <ncurses.h>
+#include <algorithm>
 
 #include "Border.hpp"
 #include "Color.hpp"
 #include "Text.hpp"
 
 Window::Window(
-    Position position, Size size, Title title,
-    Border::BorderMode borderMode = Border::FLAT, Color borderColor = NEUTRAL
+    Position position, Size size, Title title, Border::BorderMode borderMode,
+    Color borderColor
 )
     : position(position),
       size(size),
@@ -22,8 +22,8 @@ void Window::render() {
   drawBorder();
   drawTitle();
 
-  for (const Text& text : textContent) {
-    printAligned(text.content, text.alignment);
+  for (std::shared_ptr<Text> text : textContent) {
+    printText(*text);
   }
 
   wrefresh(win);
@@ -45,27 +45,38 @@ void Window::resize(Size newSize) {
   render();
 }
 
-void Window::addText(const std::string& content, Alignment alignment) {
-  textContent.push_back((Text){content, alignment});
+std::shared_ptr<Text> Window::addText(
+    const std::string& content, Alignment alignment, Color color, Offset offset
+) {
+  std::shared_ptr<Text> text =
+      std::make_shared<Text>(content, alignment, color, offset);
+  textContent.push_back(text);
   render();
+
+  return text;
 }
 
-void Window::printAligned(
-    const std::string& message, Alignment alignment, Position offset
-) {
-  int row = offset.x, column = offset.y;
-  switch (alignment) {
+void Window::removeText(std::shared_ptr<Text> text) {
+  auto iterator = std::find(textContent.begin(), textContent.end(), text);
+  if (iterator != textContent.end()) {
+    textContent.erase(iterator);
+  }
+}
+
+void Window::printText(Text text) {
+  int row = text.offset.x, column = text.offset.y;
+  switch (text.alignment) {
     case TOP_LEFT:
       row = 1;
       column = 1;
       break;
     case TOP_CENTER:
       row = 1;
-      column = size.width / 2 - message.length() / 2;
+      column = size.width / 2 - text.content.length() / 2;
       break;
     case TOP_RIGHT:
       row = 1;
-      column = size.width - message.length() - 2;
+      column = size.width - text.content.length() - 2;
       break;
     case MIDDLE_LEFT:
       row = size.height / 2;
@@ -73,11 +84,11 @@ void Window::printAligned(
       break;
     case MIDDLE_CENTER:
       row = size.height / 2;
-      column = size.width / 2 - message.length() / 2;
+      column = size.width / 2 - text.content.length() / 2;
       break;
     case MIDDLE_RIGHT:
       row = size.height / 2;
-      column = size.width - message.length() - 2;
+      column = size.width - text.content.length() - 2;
       break;
     case BOTTOM_LEFT:
       row = size.height - 1;
@@ -85,20 +96,25 @@ void Window::printAligned(
       break;
     case BOTTOM_CENTER:
       row = size.height - 1;
-      column = size.width / 2 - message.length() / 2;
+      column = size.width / 2 - text.content.length() / 2;
       break;
     case BOTTOM_RIGHT:
       row = size.height - 1;
-      column = size.width - message.length() - 2;
+      column = size.width - text.content.length() - 2;
       break;
   }
 
-  mvwprintw(win, row + offset.y, column + offset.x, "%s", message.c_str());
+  wattron(win, COLOR_PAIR(text.color));
+  mvwprintw(
+      win, row + text.offset.y, column + text.offset.x, "%s",
+      text.content.c_str()
+  );
+  wattroff(win, COLOR_PAIR(text.color));
 }
 
 void Window::setBorder(Border::BorderMode borderMode, Color color) {
   winBorder.setColor(color);
-  winBorder.setMode(borderMode);
+  winBorder.setMode(borderMode, color);
 }
 void Window::setTitle(Title newTitle) { title = newTitle; }
 
@@ -118,23 +134,23 @@ void Window::drawTitle() {
   }
 
   Alignment printAlignment;
-  Position printOffset;
+  Offset printOffset;
   switch (title.alignment) {
     case LEFT:
       printAlignment = TOP_LEFT;
-      printOffset = (Position){-1, 1};
+      printOffset = (Offset){-1, title.offset + 1};
       break;
     case CENTER:
       printAlignment = TOP_CENTER;
-      printOffset = (Position){-1, 0};
+      printOffset = (Offset){-1, title.offset + 0};
       break;
     case RIGHT:
       printAlignment = TOP_RIGHT;
-      printOffset = (Position){-1, -1};
+      printOffset = (Offset){-1, title.offset - 1};
       break;
   }
 
-  printAligned(title.title, printAlignment, printOffset);
+  printText((Text){title.title, printAlignment, title.color, printOffset});
 }
 
 Window::~Window() {

@@ -30,7 +30,8 @@ class Border {
   BorderMode mode;
   Color color;
 
-  Border(BorderMode mode, Color color);
-  void setMode(BorderMode newMode);
-  void setColor(Color newColor);
+  Border(BorderMode mode, Color color = NEUTRAL);
+  void setMode(BorderMode newMode, Color color, bool save = true);
+  void setColor(Color newColor, bool save = true);
+  void restore();
 };

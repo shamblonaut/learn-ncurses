@@ -4,12 +4,16 @@
 
 Border::Border(BorderMode mode, Color color) : mode(mode), color(color) {
   setColor(color);
-  setMode(mode);
+  setMode(mode, color);
 
   initializeColorPairs();
 }
 
-void Border::setMode(BorderMode newMode) {
+void Border::setMode(BorderMode newMode, Color color, bool save) {
+  if (save) {
+    mode = newMode;
+  }
+
   switch (mode) {
     case NONE:
       setcchar(&characters.left, L" ", 0, color, nullptr);
@@ -74,4 +78,12 @@ void Border::setMode(BorderMode newMode) {
   }
 }
 
-void Border::setColor(Color newColor) { color = newColor; }
+void Border::setColor(Color newColor, bool save) {
+  if (!save) {
+    setMode(mode, newColor);
+  } else {
+    color = newColor;
+  }
+}
+
+void Border::restore() { setMode(mode, color); }

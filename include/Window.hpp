@@ -2,6 +2,7 @@
 
 #include <ncurses.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -27,31 +28,30 @@ class Window {
   Size size;
 
   Title title;
-  std::vector<Text> textContent;
+  std::vector<std::shared_ptr<Text>> textContent;
 
   Border winBorder;
-  wchar_t borderGlyphs[8];
-
-  bool focused = false;
 
   Window(
-      Position position, Size size, Title title, Border::BorderMode borderMode,
-      Color borderColor
+      Position position, Size size, Title title = Title(""),
+      Border::BorderMode borderMode = Border::FLAT, Color borderColor = NEUTRAL
   );
 
   void render();
   void drawBorder();
   void drawTitle();
 
-  void printAligned(
-      const std::string& message, Alignment alignment,
-      Position offset = (Position){0, 0}
-  );
+  void printText(Text text);
 
   void move(Position newPosition);
   void resize(Size newSize);
 
-  void addText(const std::string& content, Alignment alignment);
+  std::shared_ptr<Text> addText(
+      const std::string& content, Alignment alignment = TOP_LEFT,
+      Color color = NEUTRAL, Offset offset = Offset(0, 0)
+  );
+  void removeText(std::shared_ptr<Text> text);
+
   void setBorder(Border::BorderMode borderMode, Color color);
   void setTitle(Title newTitle);
 
