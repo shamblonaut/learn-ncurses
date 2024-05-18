@@ -45,8 +45,9 @@ int main() {
   // Input stuff
   keypad(stdscr, TRUE);
   mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
-  mouseinterval(166);
+  mouseinterval(0);
   MEVENT mouseEvent;
+  bool mouseUp = true, mouseDown = false;
   printf("\033[?1003h\n");  // Makes the terminal report mouse movement
 
   refresh();
@@ -188,8 +189,19 @@ int main() {
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 3; j++) {
         if (mouseClicked) {
+          if (mouseEvent.bstate == BUTTON1_PRESSED) {
+            mouseUp = false;
+            mouseDown = true;
+          } else if (mouseEvent.bstate == BUTTON1_RELEASED) {
+            mouseUp = true;
+            mouseDown = false;
+          }
+
           if (wenclose(windows[i][j].win, mouseEvent.y, mouseEvent.x)) {
-            if (!activeWindow.moving) changeActiveWindow(&windows[i][j]);
+            if (!activeWindow.moving &&
+                mouseEvent.bstate != REPORT_MOUSE_POSITION) {
+              changeActiveWindow(&windows[i][j]);
+            }
             if (mouseEvent.bstate == BUTTON1_PRESSED) {
               if (mouseEvent.y == activeWindow.window->position.y +
                                       activeWindow.window->size.height - 1 ||
@@ -207,30 +219,28 @@ int main() {
 
               activeWindow.window->winBorder.setColor(MAGENTA, false);
             }
-          }
-          if (mouseEvent.bstate == REPORT_MOUSE_POSITION) {
-            if (activeWindow.moving) {
-              activeWindow.window->move((Position
-              ){activeWindow.preChangePosition.y +
-                    (mouseEvent.y - activeWindow.changePressPosition.y),
-                activeWindow.preChangePosition.x +
-                    (mouseEvent.x - activeWindow.changePressPosition.x)});
-            } else if (activeWindow.resizing) {
-              activeWindow.window->resize((Size
-              ){activeWindow.preChangeSize.height +
-                    (mouseEvent.y - activeWindow.changePressPosition.y),
-                activeWindow.preChangeSize.width +
-                    (mouseEvent.x - activeWindow.changePressPosition.x)});
-            }
-            activeWindow.window->winBorder.setColor(MAGENTA, false);
-          } else if (mouseEvent.bstate == BUTTON1_RELEASED) {
-            if (activeWindow.moving) {
+          } else if (activeWindow.moving || activeWindow.resizing) {
+            if (mouseUp) {
               activeWindow.moving = false;
-            } else if (activeWindow.resizing) {
               activeWindow.resizing = false;
+              activeWindow.window->winBorder.setColor(GREEN, false);
+            } else if (mouseDown &&
+                       mouseEvent.bstate == REPORT_MOUSE_POSITION) {
+              if (activeWindow.moving) {
+                activeWindow.window->move((Position
+                ){activeWindow.preChangePosition.y +
+                      (mouseEvent.y - activeWindow.changePressPosition.y),
+                  activeWindow.preChangePosition.x +
+                      (mouseEvent.x - activeWindow.changePressPosition.x)});
+              } else if (activeWindow.resizing) {
+                activeWindow.window->resize((Size
+                ){activeWindow.preChangeSize.height +
+                      (mouseEvent.y - activeWindow.changePressPosition.y),
+                  activeWindow.preChangeSize.width +
+                      (mouseEvent.x - activeWindow.changePressPosition.x)});
+              }
+              activeWindow.window->winBorder.setColor(MAGENTA, false);
             }
-
-            activeWindow.window->winBorder.setColor(GREEN, false);
           }
         }
 
