@@ -36,6 +36,9 @@ int main() {
 
   // Input stuff
   keypad(stdscr, TRUE);
+  mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+  mouseinterval(166);
+  MEVENT mouseEvent;
 
   refresh();
 
@@ -149,8 +152,20 @@ int main() {
       changeActiveWindow(&windows[winI][winJ]);
     }
 
+    bool mouseClicked = ch == KEY_MOUSE && getmouse(&mouseEvent) == OK;
+    /*if (mouseClicked) {*/
+    /*  mvprintw(*/
+    /*      0, 0, "Mouse event; X: %d, Y: %d, ID: %08x, Pressed: %08x",*/
+    /*      mouseEvent.x, mouseEvent.y, mouseEvent.bstate, BUTTON1_TRIPLE_CLICKED*/
+    /*  );*/
+    /*}*/
+
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 3; j++) {
+        if (mouseClicked && mouseEvent.bstate == BUTTON1_CLICKED &&
+            wenclose(windows[i][j].win, mouseEvent.y, mouseEvent.x)) {
+          changeActiveWindow(&windows[i][j]);
+        }
         windows[i][j].render();
       }
     }
