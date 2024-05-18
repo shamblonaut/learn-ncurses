@@ -30,6 +30,19 @@ void Window::render() {
 }
 
 void Window::move(Position newPosition) {
+  int screenHeight, screenWidth;
+  getmaxyx(stdscr, screenHeight, screenWidth);
+
+  if (newPosition.y < 0) {
+    newPosition.y = 0;
+  } else if (newPosition.y + size.height > screenHeight) {
+    newPosition.y = screenHeight - size.height;
+  }
+  if (newPosition.x < 0) {
+    newPosition.x = 0;
+  } else if (newPosition.x + size.width > screenWidth) {
+    newPosition.x = screenWidth - size.width;
+  }
   wclear(win);
   wrefresh(win);
   position = newPosition;
@@ -38,6 +51,19 @@ void Window::move(Position newPosition) {
 }
 
 void Window::resize(Size newSize) {
+  int screenHeight, screenWidth;
+  getmaxyx(stdscr, screenHeight, screenWidth);
+  if (newSize.height < 0) {
+    newSize.height = 0;
+  } else if (position.y + newSize.height > screenHeight) {
+    newSize.height = screenHeight - position.y;
+  }
+  if (newSize.width < 0) {
+    newSize.width = 0;
+  } else if (position.x + newSize.width > screenWidth) {
+    newSize.width = screenWidth - position.x;
+  }
+
   wclear(win);
   wrefresh(win);
   size = newSize;
