@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <panel.h>
 
 #include <clocale>
 #include <cmath>
@@ -24,6 +25,7 @@ struct ActiveWindow {
 
 void changeActiveWindow(Window* next);
 void resetWindowStates(Window windows[2][3]);
+void handleMouseEvents(Window* window, MEVENT* mouseEvent);
 
 int main() {
   // Initialize curses mode
@@ -140,22 +142,16 @@ int main() {
 
     switch (ch) {
       case 'w':
-        if (winY > 0) {
-          activeWindow.window->move((Position){--winY, winX});
-        }
+        activeWindow.window->move((Position){--winY, winX});
         break;
       case 'a':
-        if (winX > 0) activeWindow.window->move((Position){winY, --winX});
+        activeWindow.window->move((Position){winY, --winX});
         break;
       case 's':
-        if (winY < screenHeight - 1) {
-          activeWindow.window->move((Position){++winY, winX});
-        }
+        activeWindow.window->move((Position){++winY, winX});
         break;
       case 'd':
-        if (winX < screenWidth - 1) {
-          activeWindow.window->move((Position){winY, ++winX});
-        }
+        activeWindow.window->move((Position){winY, ++winX});
         break;
       case KEY_UP:
         activeWindow.window->resize((Size){--winH, winW});
@@ -199,70 +195,15 @@ int main() {
     infoBox.render();
 
     bool mouseClicked = ch == KEY_MOUSE && getmouse(&mouseEvent) == OK;
-
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 3; j++) {
         if (mouseClicked) {
-          if (mouseEvent.bstate == BUTTON1_PRESSED) {
-            mouseUp = false;
-            mouseDown = true;
-          } else if (mouseEvent.bstate == BUTTON1_RELEASED) {
-            mouseUp = true;
-            mouseDown = false;
-          }
-
-          if (wenclose(windows[i][j].win, mouseEvent.y, mouseEvent.x)) {
-            if (!activeWindow.moving &&
-                mouseEvent.bstate != REPORT_MOUSE_POSITION) {
-              changeActiveWindow(&windows[i][j]);
-            }
-            if (mouseEvent.bstate == BUTTON1_PRESSED) {
-              if (mouseEvent.y == activeWindow.window->position.y +
-                                      activeWindow.window->size.height - 1 ||
-                  mouseEvent.x == activeWindow.window->position.x +
-                                      activeWindow.window->size.width - 1) {
-                activeWindow.resizing = true;
-                activeWindow.preChangeSize = activeWindow.window->size;
-              } else {
-                activeWindow.moving = true;
-                activeWindow.preChangePosition = activeWindow.window->position;
-              }
-
-              activeWindow.changePressPosition =
-                  (Position){mouseEvent.y, mouseEvent.x};
-
-              activeWindow.window->winBorder.setColor(MAGENTA, false);
-            }
-          } else if (activeWindow.moving || activeWindow.resizing) {
-            if (mouseUp) {
-              activeWindow.moving = false;
-              activeWindow.resizing = false;
-              activeWindow.window->winBorder.setColor(GREEN, false);
-            } else if (mouseDown &&
-                       mouseEvent.bstate == REPORT_MOUSE_POSITION) {
-              if (activeWindow.moving) {
-                activeWindow.window->move((Position
-                ){activeWindow.preChangePosition.y +
-                      (mouseEvent.y - activeWindow.changePressPosition.y),
-                  activeWindow.preChangePosition.x +
-                      (mouseEvent.x - activeWindow.changePressPosition.x)});
-              } else if (activeWindow.resizing) {
-                activeWindow.window->resize((Size
-                ){activeWindow.preChangeSize.height +
-                      (mouseEvent.y - activeWindow.changePressPosition.y),
-                  activeWindow.preChangeSize.width +
-                      (mouseEvent.x - activeWindow.changePressPosition.x)});
-              }
-              activeWindow.window->winBorder.setColor(MAGENTA, false);
-            }
-          }
+          handleMouseEvents(&windows[i][j], &mouseEvent);
         }
-
         windows[i][j].render();
       }
-
-      doupdate();
     }
+    doupdate();
 
     ch = getch();
   }
@@ -325,4 +266,59 @@ void resetWindowStates(Window windows[2][3]) {
   windows[1][0].render();
   windows[1][1].render();
   windows[1][2].render();
+}
+
+int mouseUp = true, mouseDown = false;
+void handleMouseEvents(Window* window, MEVENT* mouseEvent) {
+  if (mouseEvent->bstate == BUTTON1_PRESSED) {
+    mouseUp = false;
+    mouseDown = true;
+  } else if (mouseEvent->bstate == BUTTON1_RELEASED) {
+    mouseUp = true;
+    mouseDown = false;
+  }
+
+  if (wenclose(window->win, mouseEvent->y, mouseEvent->x)) {
+    if (!activeWindow.moving && mouseEvent->bstate != REPORT_MOUSE_POSITION) {
+      changeActiveWindow(window);
+    }
+    if (mouseEvent->bstate == BUTTON1_PRESSED) {
+      if (mouseEvent->y == activeWindow.window->position.y +
+                               activeWindow.window->size.height - 1 ||
+          mouseEvent->x == activeWindow.window->position.x +
+                               activeWindow.window->size.width - 1) {
+        activeWindow.resizing = true;
+        activeWindow.preChangeSize = activeWindow.window->size;
+      } else {
+        activeWindow.moving = true;
+        activeWindow.preChangePosition = activeWindow.window->position;
+      }
+
+      activeWindow.changePressPosition =
+          (Position){mouseEvent->y, mouseEvent->x};
+
+      activeWindow.window->winBorder.setColor(MAGENTA, false);
+    }
+  } else if (activeWindow.moving || activeWindow.resizing) {
+    if (mouseUp) {
+      activeWindow.moving = false;
+      activeWindow.resizing = false;
+      activeWindow.window->winBorder.setColor(GREEN, false);
+    } else if (mouseDown && mouseEvent->bstate == REPORT_MOUSE_POSITION) {
+      if (activeWindow.moving) {
+        activeWindow.window->move((Position
+        ){activeWindow.preChangePosition.y +
+              (mouseEvent->y - activeWindow.changePressPosition.y),
+          activeWindow.preChangePosition.x +
+              (mouseEvent->x - activeWindow.changePressPosition.x)});
+      } else if (activeWindow.resizing) {
+        activeWindow.window->resize((Size
+        ){activeWindow.preChangeSize.height +
+              (mouseEvent->y - activeWindow.changePressPosition.y),
+          activeWindow.preChangeSize.width +
+              (mouseEvent->x - activeWindow.changePressPosition.x)});
+      }
+      activeWindow.window->winBorder.setColor(MAGENTA, false);
+    }
+  }
 }
