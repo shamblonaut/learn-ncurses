@@ -1,5 +1,8 @@
 #include "Window.hpp"
 
+#include <ncurses.h>
+#include <panel.h>
+
 #include <algorithm>
 
 #include "Border.hpp"
@@ -15,6 +18,7 @@ Window::Window(
       title(title),
       winBorder(Border(borderMode, borderColor)) {
   win = newwin(size.height, size.width, position.y, position.x);
+  panel = new_panel(win);
   render();
 }
 
@@ -26,7 +30,7 @@ void Window::render() {
     printText(*text);
   }
 
-  wrefresh(win);
+  update_panels();
 }
 
 void Window::move(Position newPosition) {
@@ -43,16 +47,16 @@ void Window::move(Position newPosition) {
   } else if (newPosition.x + size.width > screenWidth) {
     newPosition.x = screenWidth - size.width;
   }
-  wclear(win);
-  wrefresh(win);
+
   position = newPosition;
-  mvwin(win, position.y, position.x);
-  render();
+
+  move_panel(panel, position.y, position.x);
 }
 
 void Window::resize(Size newSize) {
   int screenHeight, screenWidth;
   getmaxyx(stdscr, screenHeight, screenWidth);
+
   if (newSize.height < 2) {
     newSize.height = 2;
   } else if (position.y + newSize.height > screenHeight) {
@@ -64,10 +68,13 @@ void Window::resize(Size newSize) {
     newSize.width = screenWidth - position.x;
   }
 
-  wclear(win);
-  wrefresh(win);
   size = newSize;
-  wresize(win, size.height, size.width);
+
+  WINDOW* oldWin = win;
+  win = newwin(size.height, size.width, position.y, position.x);
+  replace_panel(panel, win);
+  delwin(oldWin);
+
   render();
 }
 
@@ -183,5 +190,6 @@ Window::~Window() {
     wclear(win);
     wrefresh(win);
   }
+  del_panel(panel);
   delwin(win);
 }

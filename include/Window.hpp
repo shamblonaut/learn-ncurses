@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ncurses.h>
+#include <panel.h>
 
 #include <memory>
 #include <string>
@@ -23,6 +24,7 @@ struct Size {
 class Window {
  public:
   WINDOW* win;
+  PANEL* panel;
 
   Position position;
   Size size;

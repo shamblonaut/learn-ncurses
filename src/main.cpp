@@ -51,8 +51,6 @@ int main() {
   bool mouseUp = true, mouseDown = false;
   printf("\033[?1003h\n");  // Makes the terminal report mouse movement
 
-  refresh();
-
   // Get screen size
   int screenHeight, screenWidth;
   getmaxyx(stdscr, screenHeight, screenWidth);
@@ -130,6 +128,8 @@ int main() {
 
   int winI = 0, winJ = 1;
   changeActiveWindow(&windows[winI][winJ]);
+
+  doupdate();
 
   int ch = getch();
   while (ch != 'q') {
@@ -260,6 +260,8 @@ int main() {
 
         windows[i][j].render();
       }
+
+      doupdate();
     }
 
     ch = getch();

@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 
+find_library(PANEL_LIB panel)
+
 # Include directories
 include_directories(tui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -26,4 +28,4 @@ add_executable(tui ${SOURCES})
 # 
 
 # Link against ncurses library
-target_link_libraries(tui ${CURSES_LIBRARIES})
+target_link_libraries(tui ${CURSES_LIBRARIES} ${PANEL_LIB})
