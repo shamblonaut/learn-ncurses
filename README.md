@@ -25,3 +25,4 @@ make
 - Coloring
 - Using mouse to move and resize
 - Reset windows to proportional size and shape on terminal resize
+- Use panels to move and resize windows
